@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +10,7 @@
         body {
             font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
             text-align: center;
-            padding: 0;
+            padding: 20px;
             margin: 0;
         }
 
@@ -54,7 +53,7 @@
             max-width: 100%;
             max-height: 300px;
             margin-top: 10px;
-            position: relative; /* Added to make the positioning of the remove icon relative to the field */
+            position: relative;
         }
 
         .url {
@@ -69,28 +68,23 @@
         }
 
         .field img {
-            width: 90px;
+            width: 100px;
             margin: auto;
-            height: 90px;
+            height: 100px;
             object-fit: cover;
         }
 
         .remove-icon {
-            position: absolute; /* Added to position the remove icon */
-            top: 5px; /* Adjust the top position as needed */
-            right: 5px; /* Adjust the right position as needed */
+            position: absolute;
+            top: 5px;
+            right: 5px;
             cursor: pointer;
-            padding: 5px;
-            background-color: #fff;
-            color: #e74c3c;
+            padding: 2px;
+            color: #fff;
             border: 1px solid #e74c3c;
             border-radius: 50%;
             display: inline-block;
-        }
-
-        .remove-icon:hover {
             background-color: #e74c3c;
-            color: #fff;
         }
 
         .url-container {
@@ -142,9 +136,9 @@
         }
     </style>
 </head>
-
 <body>
     <div class="overlay" id="overlay"></div>
+
     <h2>show img url</h2>
     <div class="url-container">
         <div class="ur">
@@ -175,7 +169,6 @@
             </label>
             <input type="file" id="imageInput1" accept="image/*" class="custom-input">
         </div>
-
         <div class='field' id="field2">
             <label for="imageInput2" class="custom-input-label">
                 <i style="font-size:22px" class="fa">&#xf03e;</i>
@@ -185,7 +178,6 @@
             </label>
             <input type="file" id="imageInput2" accept="image/*" class="custom-input">
         </div>
-
         <div class='field' id="field3">
             <label for="imageInput3" class="custom-input-label">
                 <i style="font-size:22px" class="fa">&#xf03e;</i>
@@ -195,7 +187,6 @@
             </label>
             <input type="file" id="imageInput3" accept="image/*" class="custom-input">
         </div>
-
         <div class='field' id="field4">
             <label for="imageInput4" class="custom-input-label">
                 <i style="font-size:22px" class="fa">&#xf03e;</i>
@@ -205,7 +196,6 @@
             </label>
             <input type="file" id="imageInput4" accept="image/*" class="custom-input">
         </div>
-
         <div class='field' id="field5">
             <label for="imageInput5" class="custom-input-label">
                 <i style="font-size:22px" class="fa">&#xf03e;</i>
@@ -226,10 +216,8 @@
             document.getElementById('imageInput4'),
             document.getElementById('imageInput5'),
         ];
-
         const urlInputs = document.querySelectorAll('.url');
         const fields = document.querySelectorAll('.field');
-
         const enabledFields = [true, false, false, false, false];
 
         fileInputs.forEach((fileInput, index) => {
@@ -267,15 +255,15 @@
                 reader.onload = async function (e) {
                     const imageContainer = document.createElement('div');
                     const image = document.createElement('img');
-                    const removeIcon = document.createElement('span');
+                    const removeIcon = document.createElement('i');
                     const loader = document.createElement('div');
 
                     image.src = e.target.result;
                     image.alt = `Selected Image ${index}`;
                     loader.className = 'loader';
 
-                    removeIcon.innerHTML = 'Remove';
-                    removeIcon.className = 'remove-icon';
+                    removeIcon.style.fontSize = '15px';
+                    removeIcon.className = 'fa fa-remove remove-icon';
                     removeIcon.addEventListener('click', () => handleRemoveImage(index, field));
 
                     imageContainer.appendChild(loader);
@@ -296,6 +284,10 @@
                             body: formData,
                         });
 
+                        if (!response.ok) {
+                            throw new Error(`ImgBB API request failed with status: ${response.status}`);
+                        }
+
                         const data = await response.json();
                         console.log('Image uploaded successfully:', data);
 
@@ -313,8 +305,11 @@
                         console.error('Error uploading image to ImgBB:', error);
                     } finally {
                         hideOverlay();
+                        // Clear the value of the file input after handling the image upload
+                        fileInput.value = '';
                     }
                 };
+
                 reader.readAsDataURL(file);
             }
         }
@@ -325,7 +320,6 @@
             enabledFields[index] = false;
             field.innerHTML = '';
 
-            // Recreate the input and label elements for the file input
             const label = document.createElement('label');
             label.setAttribute('for', `imageInput${index}`);
             label.className = 'custom-input-label';
@@ -346,16 +340,17 @@
             newInput.id = `imageInput${index}`;
             newInput.accept = 'image/*';
             newInput.className = 'custom-input';
+            newInput.addEventListener('change', (event) => handleImageSelect(event, index));
 
             label.appendChild(newInput);
-
             field.appendChild(label);
+
+            // Re-enable the corresponding file input and clear the value
+            fileInputs[index - 1].disabled = false;
+            fileInputs[index - 1].value = '';
 
             updateFieldStyles();
         }
-
-        updateFieldStyles();
     </script>
 </body>
-
 </html>
