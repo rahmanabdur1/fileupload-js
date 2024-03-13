@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -207,150 +207,154 @@
         </div>
     </div>
 
-    <script>
-        const overlay = document.getElementById('overlay');
-        const fileInputs = [
-            document.getElementById('imageInput1'),
-            document.getElementById('imageInput2'),
-            document.getElementById('imageInput3'),
-            document.getElementById('imageInput4'),
-            document.getElementById('imageInput5'),
-        ];
-        const urlInputs = document.querySelectorAll('.url');
-        const fields = document.querySelectorAll('.field');
-        const enabledFields = [true, false, false, false, false];
+    <!-- Your existing HTML... -->
 
-        fileInputs.forEach((fileInput, index) => {
-            fileInput.addEventListener('change', (event) => handleImageSelect(event, index + 1));
+<script>
+    const overlay = document.getElementById('overlay');
+    const fileInputs = [
+        document.getElementById('imageInput1'),
+        document.getElementById('imageInput2'),
+        document.getElementById('imageInput3'),
+        document.getElementById('imageInput4'),
+        document.getElementById('imageInput5'),
+    ];
+    const urlInputs = document.querySelectorAll('.url');
+    const fields = document.querySelectorAll('.field');
+    const enabledFields = [true, false, false, false, false];
+
+    fileInputs.forEach((fileInput, index) => {
+        fileInput.addEventListener('change', (event) => handleImageSelect(event, index + 1));
+    });
+
+    function updateFieldStyles() {
+        fields.forEach((field, index) => {
+            field.style.backgroundColor = enabledFields[index] ? '#fff' : '#b4b4b4';
+            fileInputs[index].disabled = !enabledFields[index];
+            field.style.height = '102px';
         });
+    }
 
-        function updateFieldStyles() {
-            fields.forEach((field, index) => {
-                field.style.backgroundColor = enabledFields[index] ? '#fff' : '#b4b4b4';
-                fileInputs[index].disabled = !enabledFields[index];
-                field.style.height = '102px';
-            });
-        }
+    function showOverlay() {
+        overlay.style.display = 'flex';
+    }
 
-        function showOverlay() {
-            overlay.style.display = 'flex';
-        }
+    function hideOverlay() {
+        overlay.style.display = 'none';
+    }
 
-        function hideOverlay() {
-            overlay.style.display = 'none';
-        }
+    async function handleImageSelect(event, index) {
+        const fileInput = event.target;
+        const file = fileInput.files[0];
+        const field = document.getElementById(`field${index}`);
+        const urlInput = urlInputs[index - 1];
 
-        async function handleImageSelect(event, index) {
-            const fileInput = event.target;
-            const file = fileInput.files[0];
-            const field = document.getElementById(`field${index}`);
-            const urlInput = urlInputs[index - 1];
+        field.innerHTML = '';
 
-            field.innerHTML = '';
+        if (file) {
+            showOverlay();
 
-            if (file) {
-                showOverlay();
+            const reader = new FileReader();
+            reader.onload = async function (e) {
+                const imageContainer = document.createElement('div');
+                const image = document.createElement('img');
+                const removeIcon = document.createElement('i');
+                const loader = document.createElement('div');
 
-                const reader = new FileReader();
-                reader.onload = async function (e) {
-                    const imageContainer = document.createElement('div');
-                    const image = document.createElement('img');
-                    const removeIcon = document.createElement('i');
-                    const loader = document.createElement('div');
+                image.src = e.target.result;
+                image.alt = `Selected Image ${index}`;
+                loader.className = 'loader';
 
-                    image.src = e.target.result;
-                    image.alt = `Selected Image ${index}`;
-                    loader.className = 'loader';
+                removeIcon.style.fontSize = '15px';
+                removeIcon.className = 'fa fa-remove remove-icon';
+                removeIcon.addEventListener('click', () => handleRemoveImage(index, field));
 
-                    removeIcon.style.fontSize = '15px';
-                    removeIcon.className = 'fa fa-remove remove-icon';
-                    removeIcon.addEventListener('click', () => handleRemoveImage(index, field));
+                imageContainer.appendChild(loader);
+                imageContainer.appendChild(removeIcon);
+                imageContainer.appendChild(image);
 
-                    imageContainer.appendChild(loader);
-                    imageContainer.appendChild(removeIcon);
-                    imageContainer.appendChild(image);
+                field.appendChild(imageContainer);
 
-                    field.appendChild(imageContainer);
+                urlInput.value = '';
 
-                    urlInput.value = '';
+                const formData = new FormData();
+                formData.append('image', file);
 
-                    const formData = new FormData();
-                    formData.append('image', file);
+                const imageHostKey = 'bb08155423a2152f37f4e2b57d63d23b';
+                try {
+                    const response = await fetch(`https://api.imgbb.com/1/upload?expiration=600&key=${imageHostKey}`, {
+                        method: 'POST',
+                        body: formData,
+                    });
 
-                    const imageHostKey = 'bb08155423a2152f37f4e2b57d63d23b';
-                    try {
-                        const response = await fetch(`https://api.imgbb.com/1/upload?expiration=600&key=${imageHostKey}`, {
-                            method: 'POST',
-                            body: formData,
-                        });
-
-                        if (!response.ok) {
-                            throw new Error(`ImgBB API request failed with status: ${response.status}`);
-                        }
-
-                        const data = await response.json();
-                        console.log('Image uploaded successfully:', data);
-
-                        urlInput.value = data.data.url;
-
-                        if (index < enabledFields.length - 1) {
-                            enabledFields[index] = true;
-                        } else if (index === enabledFields.length - 1) {
-                            enabledFields[index] = true;
-                        }
-
-                        imageContainer.removeChild(loader);
-                        updateFieldStyles();
-                    } catch (error) {
-                        console.error('Error uploading image to ImgBB:', error);
-                    } finally {
-                        hideOverlay();
-                        // Clear the value of the file input after handling the image upload
-                        fileInput.value = '';
+                    if (!response.ok) {
+                        throw new Error(`ImgBB API request failed with status: ${response.status}`);
                     }
-                };
 
-                reader.readAsDataURL(file);
-            }
+                    const data = await response.json();
+                    console.log('Image uploaded successfully:', data);
+
+                    urlInput.value = data.data.url;
+
+                    if (index < enabledFields.length - 1) {
+                        enabledFields[index] = true;
+                    } else if (index === enabledFields.length - 1) {
+                        enabledFields[index] = true;
+                    }
+
+                    imageContainer.removeChild(loader);
+                    updateFieldStyles();
+                } catch (error) {
+                    console.error('Error uploading image to ImgBB:', error);
+                } finally {
+                    hideOverlay();
+                    // Clear the value of the file input after handling the image upload
+                    fileInput.value = '';
+                }
+            };
+
+            reader.readAsDataURL(file);
         }
+    }
 
-        function handleRemoveImage(index, field) {
-            const urlInput = urlInputs[index - 1];
-            urlInput.value = '';
-            enabledFields[index] = false;
-            field.innerHTML = '';
+    function handleRemoveImage(index, field) {
+        const urlInput = urlInputs[index - 1];
+        urlInput.value = '';
+        enabledFields[index] = false;
+        field.innerHTML = '';
 
-            const label = document.createElement('label');
-            label.setAttribute('for', `imageInput${index}`);
-            label.className = 'custom-input-label';
+        const label = document.createElement('label');
+        label.setAttribute('for', `imageInput${index}`);
+        label.className = 'custom-input-label';
 
-            const icon = document.createElement('i');
-            icon.style.fontSize = '22px';
-            icon.className = 'fa';
-            icon.innerHTML = '&#xf03e;';
+        const icon = document.createElement('i');
+        icon.style.fontSize = '22px';
+        icon.className = 'fa';
+        icon.innerHTML = '&#xf03e;';
 
-            const span = document.createElement('span');
-            span.innerText = 'Add to photos';
+        const span = document.createElement('span');
+        span.innerText = 'Add to photos';
 
-            label.appendChild(icon);
-            label.appendChild(span);
+        label.appendChild(icon);
+        label.appendChild(span);
 
-            const newInput = document.createElement('input');
-            newInput.type = 'file';
-            newInput.id = `imageInput${index}`;
-            newInput.accept = 'image/*';
-            newInput.className = 'custom-input';
-            newInput.addEventListener('change', (event) => handleImageSelect(event, index));
+        const newInput = document.createElement('input');
+        newInput.type = 'file';
+        newInput.id = `imageInput${index}`;
+        newInput.accept = 'image/*';
+        newInput.className = 'custom-input';
+        newInput.addEventListener('change', (event) => handleImageSelect(event, index));
 
-            label.appendChild(newInput);
-            field.appendChild(label);
+        label.appendChild(newInput);
+        field.appendChild(label);
 
-            // Re-enable the corresponding file input and clear the value
-            fileInputs[index - 1].disabled = false;
-            fileInputs[index - 1].value = '';
+        // Re-enable the corresponding file input and clear the value
+        fileInputs[index - 1].disabled = false;
+        fileInputs[index - 1].value = '';
 
-            updateFieldStyles();
-        }
-    </script>
+        updateFieldStyles();
+    }
+
+    updateFieldStyles();
+</script>
 </body>
 </html>
